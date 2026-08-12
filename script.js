@@ -25,12 +25,6 @@ import {
   setDoc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 // ——— Firebase Config (بياناتك محفوظة) ———
 const firebaseConfig = {
@@ -49,7 +43,6 @@ export const WHATSAPP_NUMBER = "966500000000";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 export const DEMO_PRODUCTS = [
   {
@@ -679,21 +672,9 @@ imageInput?.addEventListener("change", () => {
 const addForm = document.getElementById("add-product-form");
 const addBtn = document.getElementById("add-btn");
 
-function fileToDataURL(file) {
+/** ضغط الصورة وإرجاعها كـ Data URL (بدون Storage) */
+function compressToDataURL(file, maxW = 700, quality = 0.7) {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("فشل قراءة الملف"));
-    reader.readAsDataURL(file);
-  });
-}
-
-function compressImage(file, maxW = 900, quality = 0.75) {
-  return new Promise((resolve) => {
-    if (!file.type || !file.type.startsWith("image/")) {
-      resolve(file);
-      return;
-    }
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
@@ -709,21 +690,22 @@ function compressImage(file, maxW = 900, quality = 0.75) {
       canvas.height = h;
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, w, h);
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            resolve(file);
-            return;
-          }
-          resolve(new File([blob], (file.name || "img").replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
-        },
-        "image/jpeg",
-        quality
-      );
+      try {
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        // حد تقريبي أقل من 900KB عشان Firestore
+        if (dataUrl.length > 900000) {
+          const smaller = canvas.toDataURL("image/jpeg", 0.45);
+          resolve(smaller);
+        } else {
+          resolve(dataUrl);
+        }
+      } catch (err) {
+        reject(err);
+      }
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      resolve(file);
+      reject(new Error("تعذر قراءة الصورة"));
     };
     img.src = url;
   });
@@ -733,19 +715,16 @@ function firebaseErrorMessage(err) {
   const code = err?.code || "";
   const msg = err?.message || String(err);
   if (code.includes("permission-denied") || /permission/i.test(msg)) {
-    return "مرفوض: عدّل قواعد Firestore/Storage (allow write إذا request.auth != null).";
+    return "مرفوض: عدّل قواعد Firestore → allow write: if request.auth != null;";
   }
   if (code.includes("unauthenticated") || /unauthenticated/i.test(msg)) {
     return "يجب تسجيل الدخول أولاً ثم أعد المحاولة.";
   }
-  if (code.includes("storage/unauthorized")) {
-    return "Storage غير مصرّح. من Firebase → Storage → Rules: allow write: if request.auth != null;";
-  }
-  if (code.includes("storage/") && /bucket|not-found/i.test(msg + code)) {
-    return "فعّل Firebase Storage من لوحة التحكم ثم أعد المحاولة.";
+  if (/invalid-argument|exceeds|too large|1 MiB|1048576/i.test(msg)) {
+    return "الصورة كبيرة جداً. اختر صورة أصغر أو أقل دقة.";
   }
   if (/network|fetch|Failed to fetch/i.test(msg)) {
-    return "مشكلة شبكة أو CORS. شغّل الموقع عبر خادم محلي (npx serve) وليس file://";
+    return "مشكلة شبكة. شغّل الموقع عبر خادم محلي (npx serve).";
   }
   if (msg.length < 140) return msg;
   return "فشل النشر. افتح Console (F12) وشوف الخطأ.";
@@ -768,6 +747,8 @@ addForm?.addEventListener("submit", async (e) => {
   const price = parseFloat(document.getElementById("p-price").value);
   const category = document.getElementById("p-category").value;
   const file = imageInput?.files?.[0];
+  const imageUrlInput = document.getElementById("p-image-url");
+  const externalUrl = (imageUrlInput?.value || "").trim();
 
   if (!name || !Number.isFinite(price) || price < 0) {
     showToast("أدخل اسم وسعر صحيح", "error");
@@ -776,32 +757,19 @@ addForm?.addEventListener("submit", async (e) => {
     return;
   }
 
-  if (!file) {
-    showToast("اختر صورة للمنتج", "error");
+  if (!file && !externalUrl) {
+    showToast("اختر صورة أو الصق رابط صورة", "error");
     addBtn.disabled = false;
     addBtn.textContent = "نشر المنتج";
     return;
   }
 
   try {
-    addBtn.textContent = "جاري ضغط الصورة...";
-    const compressed = await compressImage(file);
+    let imageUrl = externalUrl;
 
-    let imageUrl = "";
-    try {
-      addBtn.textContent = "جاري رفع الصورة...";
-      const safeName = (compressed.name || file.name || "img.jpg").replace(/[^\w.\-]+/g, "_");
-      const fileName = `products/${Date.now()}_${safeName}`;
-      const storageRef = ref(storage, fileName);
-      await uploadBytes(storageRef, compressed);
-      imageUrl = await getDownloadURL(storageRef);
-    } catch (storageErr) {
-      console.warn("Storage failed, fallback data URL:", storageErr);
-      if ((compressed.size || file.size) > 700000) {
-        throw storageErr;
-      }
-      addBtn.textContent = "جاري حفظ الصورة...";
-      imageUrl = await fileToDataURL(compressed);
+    if (file) {
+      addBtn.textContent = "جاري ضغط الصورة...";
+      imageUrl = await compressToDataURL(file);
     }
 
     addBtn.textContent = "جاري حفظ المنتج...";
