@@ -186,37 +186,12 @@ document.querySelectorAll(".nav-goto").forEach((el) => {
     }
     history.replaceState({}, "", `#${page}`);
     showPage(page);
-    const scrollId = el.dataset.scroll;
-    if (scrollId) {
-      setTimeout(() => {
-        document.getElementById(scrollId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 80);
-    }
-  });
-});
-
-document.querySelectorAll('a[href="#home-stats"]').forEach((el) => {
-  if (el.classList.contains("nav-goto")) return;
-  el.addEventListener("click", (e) => {
-    e.preventDefault();
-    history.replaceState({}, "", "#home");
-    showPage("home");
-    setTimeout(() => {
-      document.getElementById("home-stats")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 80);
   });
 });
 
 // hash on load
 const hash = (location.hash || "#home").replace("#", "") || "home";
-if (hash === "stats" || hash === "home-stats") {
-  showPage("home");
-  setTimeout(() => {
-    document.getElementById("home-stats")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, 120);
-} else {
-  showPage(["home", "products", "about", "stats", "faq", "admin"].includes(hash) ? hash : "home");
-}
+showPage(["home", "products", "about", "stats", "faq", "admin"].includes(hash) ? hash : "home");
 
 // ========== Mobile menu ==========
 document.getElementById("mobile-menu-btn")?.addEventListener("click", () => {
