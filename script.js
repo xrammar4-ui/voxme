@@ -679,20 +679,102 @@ imageInput?.addEventListener("change", () => {
 const addForm = document.getElementById("add-product-form");
 const addBtn = document.getElementById("add-btn");
 
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("فشل قراءة الملف"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function compressImage(file, maxW = 900, quality = 0.75) {
+  return new Promise((resolve) => {
+    if (!file.type || !file.type.startsWith("image/")) {
+      resolve(file);
+      return;
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.width;
+      let h = img.height;
+      if (w > maxW) {
+        h = Math.round((h * maxW) / w);
+        w = maxW;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          resolve(new File([blob], (file.name || "img").replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+}
+
+function firebaseErrorMessage(err) {
+  const code = err?.code || "";
+  const msg = err?.message || String(err);
+  if (code.includes("permission-denied") || /permission/i.test(msg)) {
+    return "مرفوض: عدّل قواعد Firestore/Storage (allow write إذا request.auth != null).";
+  }
+  if (code.includes("unauthenticated") || /unauthenticated/i.test(msg)) {
+    return "يجب تسجيل الدخول أولاً ثم أعد المحاولة.";
+  }
+  if (code.includes("storage/unauthorized")) {
+    return "Storage غير مصرّح. من Firebase → Storage → Rules: allow write: if request.auth != null;";
+  }
+  if (code.includes("storage/") && /bucket|not-found/i.test(msg + code)) {
+    return "فعّل Firebase Storage من لوحة التحكم ثم أعد المحاولة.";
+  }
+  if (/network|fetch|Failed to fetch/i.test(msg)) {
+    return "مشكلة شبكة أو CORS. شغّل الموقع عبر خادم محلي (npx serve) وليس file://";
+  }
+  if (msg.length < 140) return msg;
+  return "فشل النشر. افتح Console (F12) وشوف الخطأ.";
+}
+
 addForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!currentUserEmail) {
+
+  const user = auth.currentUser;
+  if (!user) {
     showToast("يجب تسجيل الدخول أولاً", "error");
     openLoginModal();
     return;
   }
+
   addBtn.disabled = true;
   addBtn.textContent = "جاري النشر...";
 
   const name = document.getElementById("p-name").value.trim();
   const price = parseFloat(document.getElementById("p-price").value);
   const category = document.getElementById("p-category").value;
-  const file = imageInput.files[0];
+  const file = imageInput?.files?.[0];
+
+  if (!name || !Number.isFinite(price) || price < 0) {
+    showToast("أدخل اسم وسعر صحيح", "error");
+    addBtn.disabled = false;
+    addBtn.textContent = "نشر المنتج";
+    return;
+  }
 
   if (!file) {
     showToast("اختر صورة للمنتج", "error");
@@ -702,28 +784,46 @@ addForm?.addEventListener("submit", async (e) => {
   }
 
   try {
-    const fileName = `products/${Date.now()}_${file.name.replace(/\s/g, "_")}`;
-    const storageRef = ref(storage, fileName);
-    await uploadBytes(storageRef, file);
-    const imageUrl = await getDownloadURL(storageRef);
+    addBtn.textContent = "جاري ضغط الصورة...";
+    const compressed = await compressImage(file);
 
+    let imageUrl = "";
+    try {
+      addBtn.textContent = "جاري رفع الصورة...";
+      const safeName = (compressed.name || file.name || "img.jpg").replace(/[^\w.\-]+/g, "_");
+      const fileName = `products/${Date.now()}_${safeName}`;
+      const storageRef = ref(storage, fileName);
+      await uploadBytes(storageRef, compressed);
+      imageUrl = await getDownloadURL(storageRef);
+    } catch (storageErr) {
+      console.warn("Storage failed, fallback data URL:", storageErr);
+      if ((compressed.size || file.size) > 700000) {
+        throw storageErr;
+      }
+      addBtn.textContent = "جاري حفظ الصورة...";
+      imageUrl = await fileToDataURL(compressed);
+    }
+
+    addBtn.textContent = "جاري حفظ المنتج...";
     await addDoc(collection(db, "products"), {
       name,
       price,
       category,
       image: imageUrl,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      createdBy: user.email || ""
     });
 
     showToast("تم نشر المنتج بنجاح ✓");
     addForm.reset();
-    imagePreview.classList.add("hidden");
-    loadAdminProducts();
-    loadProducts();
+    if (imagePreview) imagePreview.classList.add("hidden");
+    if (previewImg) previewImg.src = "";
+    await loadAdminProducts();
+    await loadProducts();
     document.querySelector('[data-tab="list"]')?.click();
   } catch (err) {
-    console.error(err);
-    showToast("حدث خطأ. تأكد من إعداد Firebase وقواعد Storage.", "error");
+    console.error("Publish error:", err);
+    showToast(firebaseErrorMessage(err), "error");
   } finally {
     addBtn.disabled = false;
     addBtn.textContent = "نشر المنتج";
