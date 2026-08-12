@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vexom | متجر إكسسوارات التقنية</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { vexom: { red: '#f43f5e', dark: '#0a0a0a', card: '#141414', border: '#262626' } },
+          fontFamily: { cairo: ['Cairo', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-vexom-dark text-white font-cairo antialiased">
+
+  <!-- NAV -->
+  <nav class="fixed top-0 right-0 left-0 z-50 bg-vexom-dark/95 backdrop-blur-md border-b border-vexom-border">
+    <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
+      <a href="#home" class="flex items-center gap-2 nav-goto" data-page="home">
+        <div class="w-9 h-9 rounded-lg bg-vexom-red flex items-center justify-center font-bold text-lg logo-v">V</div>
+        <span class="text-xl font-bold">Vexom</span>
+      </a>
+      <div class="hidden md:flex items-center gap-7">
+        <a href="#home" class="nav-link active nav-goto" data-page="home">الرئيسية</a>
+        <a href="#products" class="nav-link nav-goto" data-page="products">المنتجات</a>
+        <a href="#about" class="nav-link nav-goto" data-page="about">من نحن</a>
+        <a href="#stats" class="nav-link nav-goto" data-page="stats">إحصائياتنا</a>
+        <a href="#faq" class="nav-link nav-goto" data-page="faq">الأسئلة الشائعة</a>
+        <a href="#admin" class="nav-link nav-goto hidden" data-page="admin" id="nav-admin-link">لوحة التحكم</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <button type="button" class="btn-login open-login-btn">تسجيل الدخول</button>
+        <button id="mobile-menu-btn" class="md:hidden p-2" aria-label="القائمة">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden border-t border-vexom-border px-4 py-3 space-y-2">
+      <a href="#home" class="block py-2 text-vexom-red font-medium nav-goto" data-page="home">الرئيسية</a>
+      <a href="#products" class="block py-2 nav-goto" data-page="products">المنتجات</a>
+      <a href="#about" class="block py-2 nav-goto" data-page="about">من نحن</a>
+      <a href="#stats" class="block py-2 nav-goto" data-page="stats">إحصائياتنا</a>
+      <a href="#faq" class="block py-2 nav-goto" data-page="faq">الأسئلة الشائعة</a>
+      <a href="#admin" class="block py-2 nav-goto hidden" data-page="admin" id="nav-admin-link-m">لوحة التحكم</a>
+      <button type="button" class="block py-2 text-vexom-red open-login-btn">تسجيل الدخول</button>
+    </div>
+  </nav>
+
+  <!-- LOGIN MODAL -->
+  <div id="login-modal" class="login-modal hidden" aria-hidden="true">
+    <div class="login-modal-backdrop" data-close-login></div>
+    <div class="login-modal-box">
+      <button type="button" class="login-modal-close" data-close-login aria-label="إغلاق">&times;</button>
+      <h2 class="text-xl font-bold mb-1">تسجيل الدخول</h2>
+      <p class="text-gray-400 text-sm mb-5">أدخل بيانات حسابك</p>
+      <button type="button" id="google-login-btn" class="btn-google-top">
+        <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        <span>تسجيل عبر جوجل</span>
+      </button>
+      <div class="login-or"><span>أو بالبريد</span></div>
+      <form id="login-modal-form" class="space-y-4">
+        <div>
+          <label class="admin-label" for="modal-email">البريد الإلكتروني</label>
+          <input type="email" id="modal-email" class="admin-input" required autocomplete="email">
+        </div>
+        <div>
+          <label class="admin-label" for="modal-password">كلمة المرور</label>
+          <input type="password" id="modal-password" class="admin-input" required autocomplete="current-password">
+        </div>
+        <button type="submit" id="modal-login-btn" class="btn-primary w-full">دخول</button>
+        <p id="modal-login-error" class="text-red-400 text-sm text-center hidden"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ORDER MODAL -->
+  <div id="order-modal" class="order-modal hidden" aria-hidden="true">
+    <div class="order-modal-backdrop" data-close-order></div>
+    <div class="order-modal-box">
+      <button type="button" class="order-modal-close" data-close-order aria-label="إغلاق">&times;</button>
+      <div id="order-step-pay">
+        <h2 class="text-xl font-bold mb-1">إتمام الطلب</h2>
+        <p class="text-gray-400 text-sm mb-4">اختر طريقة الدفع</p>
+        <div class="bg-vexom-card border border-vexom-border rounded-xl p-4 mb-5">
+          <p class="font-bold" id="order-product-name">—</p>
+          <p class="text-vexom-red font-extrabold text-lg mt-1" id="order-product-price">—</p>
+        </div>
+        <div class="space-y-3">
+          <button type="button" id="pay-cod-btn" class="order-pay-cod w-full py-3 rounded-xl">الدفع عند الاستلام</button>
+          <button type="button" id="pay-now-btn" class="order-pay-now w-full py-3 rounded-xl">الدفع الآن (واتساب)</button>
+        </div>
+      </div>
+      <div id="order-step-form" class="hidden">
+        <h2 class="text-xl font-bold mb-1">بيانات التوصيل</h2>
+        <p class="text-gray-400 text-sm mb-4">الدفع عند الاستلام</p>
+        <form id="order-cod-form" class="space-y-3">
+          <div>
+            <label class="admin-label" for="order-governorate">المحافظة</label>
+            <input type="text" id="order-governorate" class="admin-input" required placeholder="مثال: الرياض">
+          </div>
+          <div>
+            <label class="admin-label" for="order-address">العنوان التفصيلي</label>
+            <input type="text" id="order-address" class="admin-input" required placeholder="الحي، الشارع، رقم المبنى">
+          </div>
+          <div>
+            <label class="admin-label" for="order-phone">رقم الموبايل</label>
+            <input type="tel" id="order-phone" class="admin-input" required placeholder="05xxxxxxxx">
+          </div>
+          <div>
+            <label class="admin-label" for="order-notes">ملاحظات (اختياري)</label>
+            <input type="text" id="order-notes" class="admin-input" placeholder="أي ملاحظات للتوصيل">
+          </div>
+          <div class="flex gap-2 pt-2">
+            <button type="button" id="order-back-btn" class="btn-secondary flex-1">رجوع</button>
+            <button type="submit" id="order-submit-btn" class="btn-primary flex-1">تأكيد الطلب</button>
+          </div>
+          <p id="order-msg" class="text-center text-sm mt-3 hidden"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HOME ===== -->
+  <section id="page-home" class="page-section active">
+    <div class="relative pt-28 pb-24 overflow-hidden min-h-[80vh] flex items-center">
+      <div class="hero-glow"></div>
+      <div class="max-w-4xl mx-auto px-4 relative text-center">
+        <span class="inline-block px-4 py-1.5 rounded-full bg-vexom-red/20 text-vexom-red text-sm font-medium mb-6 border border-vexom-red/30 shadow-[0_0_20px_rgba(244,63,94,0.25)]">مرحباً بك في Vexom</span>
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+          متجرك الموثوق<br><span class="text-vexom-red drop-shadow-[0_0_30px_rgba(244,63,94,0.5)]">لإكسسوارات التقنية</span>
+        </h1>
+        <p class="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">نوفر لك أفضل إكسسوارات الكمبيوتر واللابتوب بجودة عالية وأسعار منافسة.</p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a href="#products" class="nav-goto inline-flex px-8 py-3.5 rounded-full bg-vexom-red text-white font-bold shadow-lg shadow-vexom-red/40 hover:bg-rose-600 transition-all" data-page="products">تصفح المنتجات</a>
+          <a href="#stats" class="nav-goto inline-flex px-8 py-3.5 rounded-full border border-neutral-600 text-white font-semibold hover:border-vexom-red hover:text-vexom-red transition-all" data-page="stats">إحصائياتنا</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRODUCTS ===== -->
+  <section id="page-products" class="page-section">
+    <div class="pt-28 pb-6">
+      <div class="max-w-7xl mx-auto px-4">
+        <h1 class="text-3xl sm:text-4xl font-bold mb-1">المنتجات</h1>
+        <p class="text-gray-400">تصفح جميع المنتجات المتاحة في المتجر</p>
+      </div>
+    </div>
+    <div class="pb-4 sticky top-16 z-40 bg-vexom-dark/95 backdrop-blur-md border-b border-vexom-border">
+      <div class="max-w-7xl mx-auto px-4 py-4 space-y-4">
+        <div class="search-bar">
+          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="search" id="search-input" placeholder="إبحث عن منتج بالاسم..." autocomplete="off">
+          <button type="button" id="search-btn" class="search-btn">بحث</button>
+        </div>
+        <div class="categories-panel">
+          <span class="categories-label">تصفية:</span>
+          <div id="category-pills" class="category-pills-track">
+            <button type="button" class="cat-pill active" data-cat="all">الكل</button>
+            <button type="button" class="cat-pill" data-cat="pc-accessories">إكسسوارات كمبيوتر</button>
+            <button type="button" class="cat-pill" data-cat="mobile-accessories">إكسسوارات موبايل</button>
+            <button type="button" class="cat-pill" data-cat="cameras">كاميرات مراقبة</button>
+            <button type="button" class="cat-pill" data-cat="laptop">لابتوب</button>
+            <button type="button" class="cat-pill" data-cat="monitors">شاشات</button>
+            <button type="button" class="cat-pill" data-cat="pc-original">PC ORIGINAL</button>
+            <button type="button" class="cat-pill" data-cat="pc-builds">تجميعات PC</button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-sm text-gray-400">
+          <span id="products-count"></span>
+          <span>الأحدث</span>
+        </div>
+      </div>
+    </div>
+    <div class="py-8">
+      <div class="max-w-7xl mx-auto px-4">
+        <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        <div id="no-products" class="hidden text-center py-20 text-gray-400">
+          <h3 class="text-xl font-bold mb-2 text-white">لا توجد منتجات</h3>
+          <p>جرب تغيير التصنيف أو كلمة البحث</p>
+        </div>
+        <div id="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div class="product-skeleton"></div>
+          <div class="product-skeleton"></div>
+          <div class="product-skeleton"></div>
+          <div class="product-skeleton"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT ===== -->
+  <section id="page-about" class="page-section">
+    <main class="pt-28 pb-16">
+      <div class="max-w-3xl mx-auto px-4">
+        <h1 class="text-3xl sm:text-4xl font-bold mb-4">من نحن</h1>
+        <p class="text-gray-400 text-lg leading-relaxed mb-6">Vexom متجر متخصص في إكسسوارات الكمبيوتر واللابتوب والموبايل والشاشات وتجميعات PC.</p>
+        <p class="text-gray-400 leading-relaxed mb-8">نهدف لتقديم منتجات أصلية بأسعار منافسة مع خدمة عملاء سريعة عبر واتساب.</p>
+        <a href="#products" class="nav-goto inline-flex px-8 py-3.5 rounded-full bg-vexom-red text-white font-bold shadow-lg shadow-vexom-red/30" data-page="products">تصفح المنتجات</a>
+      </div>
+    </main>
+  </section>
+
+  <!-- ===== STATS ===== -->
+  <section id="page-stats" class="page-section">
+    <main class="pt-28 pb-16">
+      <div class="max-w-5xl mx-auto px-4">
+        <div class="text-center mb-12">
+          <h1 class="text-3xl sm:text-4xl font-bold mb-2">إحصائياتنا</h1>
+          <p class="text-gray-400">أرقام نفتخر بها</p>
+        </div>
+        <div class="grid sm:grid-cols-3 gap-6">
+          <div class="stat-card">
+            <div class="text-4xl font-extrabold text-vexom-red mb-1">5.0 ★</div>
+            <p class="text-gray-400 font-medium">تقييم العملاء</p>
+          </div>
+          <div class="stat-card">
+            <div class="text-4xl font-extrabold text-vexom-red mb-1">+2,500</div>
+            <p class="text-gray-400 font-medium">خدمة تمت بنجاح</p>
+          </div>
+          <div class="stat-card">
+            <div class="text-4xl font-extrabold text-vexom-red mb-1">+1,200</div>
+            <p class="text-gray-400 font-medium">عميل سعيد</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- ===== FAQ ===== -->
+  <section id="page-faq" class="page-section">
+    <main class="pt-28 pb-16">
+      <div class="max-w-3xl mx-auto px-4">
+        <div class="text-center mb-10">
+          <h1 class="text-3xl sm:text-4xl font-bold mb-2">الأسئلة الشائعة</h1>
+          <p class="text-gray-400">إجابات سريعة لأكثر الأسئلة تكراراً</p>
+        </div>
+        <div class="space-y-4">
+          <div class="faq-item">
+            <div class="faq-question"><h3>ما هي طرق الدفع المتاحة؟</h3></div>
+            <button type="button" class="faq-toggle" aria-expanded="false"><span class="faq-toggle-text">عرض الإجابة</span>
+              <svg class="faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer"><p>يمكنك الدفع عند الاستلام أو عبر التحويل البنكي.</p></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question"><h3>كم مدة التوصيل؟</h3></div>
+            <button type="button" class="faq-toggle" aria-expanded="false"><span class="faq-toggle-text">عرض الإجابة</span>
+              <svg class="faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer"><p>التوصيل عادة خلال 1–3 أيام عمل حسب المدينة.</p></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question"><h3>هل المنتجات أصلية؟</h3></div>
+            <button type="button" class="faq-toggle" aria-expanded="false"><span class="faq-toggle-text">عرض الإجابة</span>
+              <svg class="faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer"><p>نعم، جميع المنتجات أصلية ومضمونة الجودة.</p></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question"><h3>هل يمكن إرجاع المنتج؟</h3></div>
+            <button type="button" class="faq-toggle" aria-expanded="false"><span class="faq-toggle-text">عرض الإجابة</span>
+              <svg class="faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer"><p>نعم، خلال 7 أيام بشرط أن يكون المنتج بحالته الأصلية.</p></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- ===== ADMIN ===== -->
+  <section id="page-admin" class="page-section">
+    <div class="pt-24 admin-wrap">
+      <div class="admin-header-bar">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold">لوحة التحكم</h1>
+          <p class="text-gray-400 text-sm mt-1">مرحباً، <span id="admin-email-display" class="text-vexom-red font-semibold">—</span></p>
+        </div>
+        <button type="button" id="logout-btn" class="btn-secondary text-sm px-4 py-2">تسجيل الخروج</button>
+      </div>
+
+      <div class="admin-tabs">
+        <button type="button" class="tab-btn active" data-tab="add">إضافة منتج</button>
+        <button type="button" class="tab-btn" data-tab="list">المنتجات <span id="admin-count" class="text-xs opacity-70"></span></button>
+        <button type="button" class="tab-btn hidden" data-tab="admins" id="admins-tab-btn">المشرفين</button>
+      </div>
+
+      <!-- Tab: Add -->
+      <div id="tab-add" class="tab-content">
+        <form id="add-product-form" class="bg-vexom-card border border-vexom-border rounded-2xl p-5 sm:p-6 space-y-4 max-w-lg">
+          <div>
+            <label class="admin-label" for="p-name">اسم المنتج</label>
+            <input type="text" id="p-name" class="admin-input" required placeholder="مثال: لوحة مفاتيح ميكانيكية">
+          </div>
+          <div>
+            <label class="admin-label" for="p-price">السعر (ر.س)</label>
+            <input type="number" id="p-price" class="admin-input" required min="0" step="0.01" placeholder="189">
+          </div>
+          <div>
+            <label class="admin-label" for="p-category">التصنيف</label>
+            <select id="p-category" class="admin-input" required>
+              <option value="pc-accessories">إكسسوارات كمبيوتر</option>
+              <option value="mobile-accessories">إكسسوارات موبايل</option>
+              <option value="cameras">كاميرات مراقبة</option>
+              <option value="laptop">لابتوب</option>
+              <option value="monitors">شاشات</option>
+              <option value="pc-original">PC ORIGINAL</option>
+              <option value="pc-builds">تجميعات PC</option>
+            </select>
+          </div>
+          <div>
+            <label class="admin-label" for="p-image">صورة المنتج</label>
+            <input type="file" id="p-image" class="admin-input" accept="image/*" required>
+            <div id="image-preview" class="hidden mt-3">
+              <img id="preview-img" src="" alt="معاينة">
+            </div>
+          </div>
+          <button type="submit" id="add-btn" class="btn-primary w-full">نشر المنتج</button>
+        </form>
+      </div>
+
+      <!-- Tab: List -->
+      <div id="tab-list" class="tab-content hidden">
+        <div id="admin-products" class="space-y-3"></div>
+        <div id="admin-empty" class="hidden text-center py-12 text-gray-400">
+          <p>لا توجد منتجات بعد. أضف أول منتج من تبويب «إضافة منتج».</p>
+        </div>
+      </div>
+
+      <!-- Tab: Admins -->
+      <div id="tab-admins" class="tab-content hidden">
+        <form id="add-admin-form" class="bg-vexom-card border border-vexom-border rounded-2xl p-5 mb-6 max-w-lg space-y-3">
+          <h3 class="font-bold">إضافة مشرف</h3>
+          <div>
+            <label class="admin-label" for="admin-email-input">البريد الإلكتروني</label>
+            <input type="email" id="admin-email-input" class="admin-input" required placeholder="admin@example.com">
+          </div>
+          <button type="submit" class="btn-primary">إضافة مشرف</button>
+        </form>
+        <div id="admins-list" class="space-y-2"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="border-t border-vexom-border py-8 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">© 2026 Vexom</div>
+  </footer>
+
+  <a id="whatsapp-float" href="https://wa.me/966500000000" target="_blank" class="whatsapp-float" aria-label="واتساب">
+    <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
