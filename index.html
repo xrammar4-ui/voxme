@@ -317,11 +317,16 @@
             </select>
           </div>
           <div>
-            <label class="admin-label" for="p-image">صورة المنتج</label>
-            <input type="file" id="p-image" class="admin-input" accept="image/*" required>
+            <label class="admin-label" for="p-image">صورة المنتج (من الجهاز)</label>
+            <input type="file" id="p-image" class="admin-input" accept="image/*">
             <div id="image-preview" class="hidden mt-3">
               <img id="preview-img" src="" alt="معاينة">
             </div>
+          </div>
+          <div>
+            <label class="admin-label" for="p-image-url">أو رابط صورة (اختياري)</label>
+            <input type="url" id="p-image-url" class="admin-input" placeholder="https://example.com/image.jpg">
+            <p class="text-xs text-gray-500 mt-1">بدون Firebase Storage — الصورة تُحفظ مباشرة مع المنتج</p>
           </div>
           <button type="submit" id="add-btn" class="btn-primary w-full">نشر المنتج</button>
         </form>
